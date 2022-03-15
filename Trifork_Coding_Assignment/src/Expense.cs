@@ -6,13 +6,13 @@ namespace Trifork_Coding_Assignment
         public int id;
         public string? name;
         public int paidByUserId;
-        public double price;
+        public decimal price;
         public DateTime date;
         
         private UserPayer[] users;
         private Group group;
 
-        public Expense(Group group, UserAccount user, string name, double price)
+        public Expense(Group group, UserAccount user, string name, decimal price)
         {
             this.id = 0;
             this.paidByUserId = user.id;
@@ -28,8 +28,7 @@ namespace Trifork_Coding_Assignment
                 for (int i = 0; i < group.users.Count; i++)
                 {
                     UserAccount user_ = group.users.ElementAt(i).Value;
-                    double amount = price / group.users.Count;
-                    users[i] = new UserPayer(user_, amount);
+                    users[i] = new UserPayer(user_);
                     users[i].hasPaid = user_.id == this.paidByUserId;
                 }
             }
@@ -49,35 +48,16 @@ namespace Trifork_Coding_Assignment
 
             if (paidUser != null && !paidUser.hasPaid)
             {
-                UserAccount paidByUser = group.users[this.paidByUserId];
+                UserAccount paidByUser = group.users[this.paidByUserId]; 
                 if (paidByUser != null)
                 {
-                    user.TransfereMoneyTo(paidByUser, paidUser.amount);
+                    user.TransfereMoneyTo(paidByUser, 0);
                     paidUser.hasPaid = true;
                 }
             }
         }
 
-        /// <summary>
-        /// Get the amount the user own of the expense
-        /// </summary>
-        /// <param name="user"></param>
-        /// 
-        /// <returns> The amount of money</returns>
-        public double getAmount(UserAccount user)
-        {
-            if(user == null) { return 0; }
-
-            UserPayer paidUser = Array.Find(users, user_ => user_.user.id == user.id && user.id != this.paidByUserId);
-
-            if(paidUser != null)
-            {
-                return paidUser.amount;
-            } else
-            {
-                return 0;
-            }
-        }
+  
 
         /// <summary>
         ///  Check if the user has paid 
@@ -142,17 +122,15 @@ namespace Trifork_Coding_Assignment
     {
         public UserAccount user;
         public bool hasPaid = false;
-        public double amount;
 
-        public UserPayer(UserAccount user, double amount)
+        public UserPayer(UserAccount usert)
         {
             this.user = user;
-            this.amount = amount;
         }
 
         public override string ToString()
         {
-            return String.Format("id: {0}, hasPaid: {1}, amount: {2}", user.id, hasPaid, amount);
+            return String.Format("id: {0}, hasPaid: {1}}", user.id, hasPaid);
         }
     }
 
