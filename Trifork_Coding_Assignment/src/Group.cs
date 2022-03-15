@@ -10,10 +10,10 @@ namespace Trifork_Coding_Assignment
 
         private List<Expense> expenses = new List<Expense>();
 
-        public decimal MoneyTotal
+        public double MoneyTotal
         {
             get {
-                decimal total = 0;
+                double total = 0;
 
                 foreach (Expense expense in expenses)
                 {
@@ -25,13 +25,35 @@ namespace Trifork_Coding_Assignment
         }
 
         /// <summary>
+        ///  Get all users
+        /// </summary>
+        public List<UserAccount> Users
+        {
+            get
+            {
+                return new List<UserAccount>(this.users.Values);
+            }
+        }
+
+        /// <summary>
         ///  Get all unpaid expenses 
+        /// </summary>
+        public List<Expense> UnpaidExpenses
+        {
+            get
+            {
+                return expenses.FindAll(exp => !exp.isCompleted());
+            }
+        }
+
+        /// <summary>
+        ///  Get all expenses 
         /// </summary>
         public List<Expense> Expenses
         {
             get
             {
-                return expenses.FindAll(exp => !exp.isCompleted());
+                return expenses;
             }
         }
 
@@ -53,12 +75,11 @@ namespace Trifork_Coding_Assignment
         /// <param name="userId"></param>
         /// <param name="price"></param>
         /// <param name="name"></param>
-        public void AddExpense(int userId, decimal price, string name)
+        public void AddExpense(int userId, double price, string name)
         {
             users[userId].spent(price);
 
             expenses.Add(new Expense(this, users[userId], name, price));
-
         }
 
         /// <summary>
@@ -80,9 +101,9 @@ namespace Trifork_Coding_Assignment
         /// <param name="userId"></param>
         /// 
         /// <returns>total money the user has paid for</returns>
-        public decimal GetUserSpent(int userId)
+        public double GetUserSpent(int userId)
         {
-            decimal total = 0;
+            double total = 0;
 
             foreach (Expense expense in GetAllExpensesMadeByUser(userId))
             {
@@ -110,6 +131,52 @@ namespace Trifork_Coding_Assignment
         }
 
         /// <summary>
+        ///  Send a payment to a user
+        /// </summary>
+        /// <param name="userId1"></param>
+        /// <param name="userId2"></param>
+        public void sendPayments(int userId1, int userId2)
+        {
+            List<Expense> expenses = GetAllUnPaidExpenses(userId1);
+            UserBalance payments = GetListOfPayments().Find(balance => balance.user.id == userId1);
+
+            if (payments != null)
+            {
+                Debt deb = payments.debt[userId2];
+
+                if (userbalances[userId1].debt.ContainsKey(userId2))
+                {
+                    userbalances[userId1].debt[userId2].amount += deb.amount;
+                }
+                else
+                {
+                    Debt debt = new Debt();
+                    debt.amount = deb.amount;
+                    userbalances[userId1].debt[userId2] = debt;
+                }
+            }
+
+            foreach (Expense expense in expenses)
+            {
+                expense.markAsPaid(userId1);
+            }
+        }
+
+        /// <summary>
+        ///  Mark all payments has been made
+        /// </summary>
+        public void complete()
+        {
+            foreach (Expense expense in UnpaidExpenses)
+            {
+                foreach(UserAccount userAccount in Users)
+                {
+                    expense.markAsPaid(userAccount.id);
+                }
+            }
+        }
+
+        /// <summary>
         ///  Get a list of payments that would settle all debts 
         /// </summary>
         /// 
@@ -125,38 +192,49 @@ namespace Trifork_Coding_Assignment
                 balances.Add(balance);
             }
 
-            foreach(UserBalance balance in balances)
+            foreach (UserBalance balance in balances)
             {
                 // this user need money from the others
                 if(balance.balance > 0)
                 {
                     foreach (UserBalance balance2 in balances)
                     {
-                        if (balance.balance == 0)
+                        if (balance.balance <= 0)
                         {
                             break;
                         }
+
                         // this user need money from the others
                         if (balance2.user.id != balance.user.id && balance2.balance < 0)
                         {
-                            if (Math.Abs(balance2.balance) <= balance.balance)
+                            if (Math.Abs(balance2.balance) == balance.balance)
                             {
-                                decimal amount = Math.Abs(balance2.balance);
+                                double amount = Math.Abs(balance2.balance);
                                 Debt debt = new Debt();
                                 debt.amount = amount;
                                 balance2.debt.Add(balance.user.id, debt);
 
                                 balance2.balance = 0;
-                                balance.balance = Math.Round(balance.balance - amount, 2);
+                                balance.balance = 0;
+                              // user2 balance is less user1 balance 
+                            } else if (Math.Abs(balance2.balance) <= balance.balance)
+                            {
+                                double amount = Math.Abs(balance2.balance);
+                                Debt debt = new Debt();
+                                debt.amount = amount;
+                                balance2.debt.Add(balance.user.id, debt);
+
+                                balance2.balance = 0;
+                                balance.balance = balance.balance - amount;
                             } else
                             {
-                                decimal amount = Math.Round(Math.Abs(balance2.balance) - balance.balance, 2);
+                                double amount = Math.Abs(balance2.balance) - balance.balance;
                                 Debt debt = new Debt();
                                 debt.amount = amount;
 
                                 balance2.debt.Add(balance.user.id, debt);
                                 balance2.balance = -amount;
-                                balance.balance = Math.Round(balance.balance - amount, 2);
+                                balance.balance = 0;
                             }
                         }
                     }
@@ -176,10 +254,10 @@ namespace Trifork_Coding_Assignment
             UserAccount user = users[userId];
             UserBalance balance = new UserBalance(user);
 
-            decimal groupTotal = this.MoneyTotal;
-            decimal groupShare = groupTotal / users.Count;
-            
-            decimal moneySpent = GetUserSpent(user.id);
+            double groupTotal = this.MoneyTotal;
+            double groupShare = Math.Round(groupTotal / users.Count, 3);
+
+            double moneySpent = GetUserSpent(user.id);
 
             balance.balance = Math.Round(moneySpent - groupShare, 2);
             balance.balanceTotal = balance.balance;
@@ -191,19 +269,24 @@ namespace Trifork_Coding_Assignment
     public class UserBalance
     {
         public UserAccount user;
-        public decimal balanceTotal = 0;
-        public decimal balance = 0;
+        public double balanceTotal = 0;
+        public double balance = 0;
         public Dictionary<int, Debt> debt = new Dictionary<int, Debt>();
 
         public UserBalance(UserAccount user)
         {
             this.user = user;
         }
+
+        public override string ToString()
+        {
+            return String.Format("User(id: {0}, name: {1}) balance: {2}$", user?.id, user?.userName, balance );
+        }
     }
 
     public class Debt
     {
-        public decimal amount = 0;
+        public double amount = 0;
         public List<Expense> expenses = new List<Expense>();
     }
 }
