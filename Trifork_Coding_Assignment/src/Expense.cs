@@ -5,13 +5,13 @@ namespace Trifork_Coding_Assignment
     {
         public string? name;
         public int paidByUserId;
-        public decimal price;
+        public double price;
         public DateTime date;
         
         private UserPayer[] users;
         private Group group;
 
-        public Expense(Group group, UserAccount user, string name, decimal price)
+        public Expense(Group group, UserAccount user, string name, double price)
         {
             this.paidByUserId = user.id;
             this.name = name;
@@ -111,7 +111,7 @@ namespace Trifork_Coding_Assignment
         public override string ToString()
         {
             UserAccount user = group.users[paidByUserId];
-            return String.Format("Expense: paid by: (id: {0}, name: {1}), costed: {2}, has Been Paid: {3}", user.id, user.userName, price, isCompleted());
+            return String.Format("Expense \"{3}\" has be paid by: (id: {0}, name: {1}), price: {2}$", user.id, user.userName, price, name);
         }
     }
 
@@ -127,7 +127,7 @@ namespace Trifork_Coding_Assignment
 
         public override string ToString()
         {
-            return String.Format("id: {0}, hasPaid: {1}", user?.id, this.hasPaid);
+            return String.Format("userId: {0}, has user paid: {1}", user?.id, this.hasPaid);
         }
     }
 

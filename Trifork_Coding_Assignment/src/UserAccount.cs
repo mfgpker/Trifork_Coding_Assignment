@@ -4,22 +4,21 @@
     {
         public int id;
         public String? userName = null;
-        public decimal money = 0.0M;
+        public double money = 0.0;
 
-        public UserAccount (int id, String name, decimal money)
+        public UserAccount (int id, String name, double money)
         {
             this.id = id;
             this.money = money;
             this.userName = name;
         }
 
-     
         /// <summary>
         ///  Transfere the money from this user to the user 
         /// </summary>
         /// <param name="user"></param>
         /// <param name="amount"></param>
-        public void TransfereMoneyTo(UserAccount user, decimal amount)
+        public void TransfereMoneyTo(UserAccount user, double amount)
         {
             this.money -= amount;
             user.money += amount;
@@ -29,7 +28,7 @@
         ///  User has paid for an expense
         /// </summary>
         /// <param name="amount"></param>
-        public void spent(decimal amount)
+        public void spent(double amount)
         {
             this.money -= amount;
         }
