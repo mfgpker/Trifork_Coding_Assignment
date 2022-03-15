@@ -6,8 +6,9 @@ namespace Trifork_Coding_Assignment
     {
         public string? groupName = null;
         public Dictionary<int, UserAccount> users = new Dictionary<int, UserAccount>();
+        private Dictionary<int, UserBalance> userbalances = new Dictionary<int, UserBalance>();
 
-        public List<Expense> expenses = new List<Expense>();
+        private List<Expense> expenses = new List<Expense>();
 
         public decimal MoneyTotal
         {
@@ -21,7 +22,18 @@ namespace Trifork_Coding_Assignment
 
                 return total;
             }
-        } 
+        }
+
+        /// <summary>
+        ///  Get all unpaid expenses 
+        /// </summary>
+        public List<Expense> Expenses
+        {
+            get
+            {
+                return expenses.FindAll(exp => !exp.isCompleted());
+            }
+        }
 
         public Group(String groupName, List<UserAccount> usersList)
         {
@@ -30,6 +42,7 @@ namespace Trifork_Coding_Assignment
             foreach(var user in usersList)
             {
                 this.users.Add(user.id, user);
+                this.userbalances.Add(user.id, new UserBalance(user));
             }
         }
 
@@ -42,9 +55,10 @@ namespace Trifork_Coding_Assignment
         /// <param name="name"></param>
         public void AddExpense(int userId, decimal price, string name)
         {
-            users[userId].pay(price);
+            users[userId].spent(price);
 
             expenses.Add(new Expense(this, users[userId], name, price));
+
         }
 
         /// <summary>
@@ -56,7 +70,6 @@ namespace Trifork_Coding_Assignment
         /// <returns>List of all unpaid expenses</returns>
         public List<Expense> GetAllExpensesMadeByUser(int userId)
         {
-
             return expenses.FindAll(expense => expense.paidByUserId == userId);
         }
 
@@ -97,38 +110,11 @@ namespace Trifork_Coding_Assignment
         }
 
         /// <summary>
-        ///     The user pay all unpaid expenses the user has
-        /// </summary>
-        /// <param name="userId"></param>
-        public void userPayAllDebt(int userId)
-        {
-            if (users[userId] == null)
-            {
-                return;
-            }
-
-            UserAccount userAccount = users[userId];
-            UserBalance balance = GetUserBalance(userId);
-
-            // user transfere money
-            foreach (KeyValuePair<int, Debt> depKvp in balance.debt)
-            {
-                userAccount.TransfereMoneyTo(users[depKvp.Key], depKvp.Value.amount);
-            }
-
-            // mark all expenses that the user has paid the part the user owns
-            foreach(Expense expense in GetAllUnPaidExpenses(userId))
-            {
-                expense.markAsPaid(userId);
-            }
-        }
-
-        /// <summary>
-        ///  Check balance for each user in the group
+        ///  Get a list of payments that would settle all debts 
         /// </summary>
         /// 
-        /// <returns>Get a balance for each users </returns>
-        public List<UserBalance> checkAllBalances()
+        /// <returns>list of payments </returns>
+        public List<UserBalance> GetListOfPayments()
         {
             List<UserBalance> balances = new List<UserBalance>();
 

@@ -3,7 +3,6 @@ namespace Trifork_Coding_Assignment
 {
     public class Expense
     {
-        public int id;
         public string? name;
         public int paidByUserId;
         public decimal price;
@@ -14,7 +13,6 @@ namespace Trifork_Coding_Assignment
 
         public Expense(Group group, UserAccount user, string name, decimal price)
         {
-            this.id = 0;
             this.paidByUserId = user.id;
             this.name = name;
             this.price = price;
@@ -55,9 +53,7 @@ namespace Trifork_Coding_Assignment
                     paidUser.hasPaid = true;
                 }
             }
-        }
-
-  
+        }  
 
         /// <summary>
         ///  Check if the user has paid 
@@ -71,7 +67,7 @@ namespace Trifork_Coding_Assignment
                 return false;
             }
 
-            UserPayer paidUser = Array.Find(users, user_ => user_.user.id == user.id);
+            UserPayer paidUser = Array.Find(users, user_ => user_ != null && user_.user.id == user.id);
 
             return paidUser != null && paidUser.hasPaid;
         }
@@ -114,7 +110,8 @@ namespace Trifork_Coding_Assignment
 
         public override string ToString()
         {
-            return String.Format("id: {0}, paidBy: {1}, price: {2}, has Been Paid: {3}", id, paidByUserId, price, isCompleted());
+            UserAccount user = group.users[paidByUserId];
+            return String.Format("Expense: paid by: (id: {0}, name: {1}), costed: {2}, has Been Paid: {3}", user.id, user.userName, price, isCompleted());
         }
     }
 
@@ -123,14 +120,14 @@ namespace Trifork_Coding_Assignment
         public UserAccount user;
         public bool hasPaid = false;
 
-        public UserPayer(UserAccount usert)
+        public UserPayer(UserAccount user)
         {
             this.user = user;
         }
 
         public override string ToString()
         {
-            return String.Format("id: {0}, hasPaid: {1}}", user.id, hasPaid);
+            return String.Format("id: {0}, hasPaid: {1}", user?.id, this.hasPaid);
         }
     }
 

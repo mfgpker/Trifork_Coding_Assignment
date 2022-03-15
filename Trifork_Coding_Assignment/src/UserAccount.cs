@@ -29,7 +29,7 @@
         ///  User has paid for an expense
         /// </summary>
         /// <param name="amount"></param>
-        public void pay(decimal amount)
+        public void spent(decimal amount)
         {
             this.money -= amount;
         }
